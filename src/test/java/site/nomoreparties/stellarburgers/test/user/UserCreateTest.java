@@ -9,8 +9,10 @@ import site.nomoreparties.stellarburgers.User;
 import site.nomoreparties.stellarburgers.object_api.CommonMethod;
 import site.nomoreparties.stellarburgers.object_api.UserMethod;
 
+import static site.nomoreparties.stellarburgers.constant.BodyFieldValue.*;
 import static site.nomoreparties.stellarburgers.constant.ServiceName.*;
 import static site.nomoreparties.stellarburgers.constant.StatusCode.*;
+import static site.nomoreparties.stellarburgers.constant.User.*;
 
 public class UserCreateTest {
 
@@ -19,36 +21,23 @@ public class UserCreateTest {
 
     //Create user
     private static final String userEmail  = "maxim7898752367@stellarburger.site";
-    private static final String userPassword = "password";
     private static final String userName = "maxim";
-    private static final String userJsonLogin = "{\"email\": \"maxim7898752367@stellarburger.site\", \"password\": \"password\"}";
-    private static final String userBodyFieldSuccess = "success";
-    private static final String userBodyFieldUserEmail = "user.email";
-    private static final String userBodyFieldUserName = "user.name";
-    private static final String userBodyFieldAccessToken = "accessToken";
-    private static final String userBodyFieldRefreshToken = "refreshToken";
-    private static final Boolean userBodyValueTrue = true;
 
     //Create user double test
     private static final String userEmailDouble = "double734345363@stellarburger.site";
-    private static final String userJsonLoginDouble = "{\"email\": \"double734345363@stellarburger.site\", \"password\": \"password\"}";
-    private static final String userBodyFieldSuccessDouble = "success";
-    private static final Boolean userBodyValueSuccessDouble = false;
-    private static final String userBodyFieldMessageDouble = "message";
-    private static final String userBodyValueMessageDouble = "User already exists";
 
     //Create user without name test
-    private static final String userJsonWithoutLoginField = "{\"email\": \"without5388799@stellarburger.site\", \"password\": \"password\"}";
-    private static final String userBodyFieldMessageWithoutLoginField  = "message";
-    private static final String userBodyValueMessageWithoutLoginField  = "Email, password and name are required fields";
+    private static final String userWithoutNameEmail = "without5388799@stellarburger.site";
 
     @BeforeClass
     public static void suiteSetup() {
         RestAssured.baseURI = BASE_URI;
-        user = new User(userEmail, userPassword, userName);
-        userDouble = new User(userEmailDouble, userPassword, userName);
-        UserMethod.resetUser(userJsonLogin);
-        UserMethod.resetUser(userJsonLoginDouble);
+        user = new User(userEmail, USER_PASSWORD, userName);
+        userDouble = new User(userEmailDouble, USER_PASSWORD, userName);
+        User resetUser = new User(userEmail, USER_PASSWORD, null);
+        UserMethod.resetUser(resetUser);
+        User resetUserDouble = new User(userEmailDouble, USER_PASSWORD, null);
+        UserMethod.resetUser(resetUserDouble);
     }
 
     @Test
@@ -56,11 +45,11 @@ public class UserCreateTest {
     public void checkCreateUser() {
         ValidatableResponse response = UserMethod.sendPostRequestCreateUser(user);
         CommonMethod.checkResponseCode(response, CODE_200);
-        CommonMethod.checkResponseBody(response, userBodyFieldSuccess, userBodyValueTrue);
-        CommonMethod.checkResponseBody(response, userBodyFieldUserEmail, userEmail);
-        CommonMethod.checkResponseBody(response, userBodyFieldUserName, userName);
-        CommonMethod.checkResponseBodyNotNullField(response, userBodyFieldAccessToken);
-        CommonMethod.checkResponseBodyNotNullField(response, userBodyFieldRefreshToken);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, true);
+        CommonMethod.checkResponseBody(response, FIELD_USER_EMAIL, userEmail);
+        CommonMethod.checkResponseBody(response, FIELD_USER_NAME, userName);
+        CommonMethod.checkResponseBodyNotNullField(response, FIELD_ACCESS_TOKEN);
+        CommonMethod.checkResponseBodyNotNullField(response, FIELD_REFRESH_TOKEN);
     }
 
     @Test
@@ -70,16 +59,17 @@ public class UserCreateTest {
         CommonMethod.checkResponseCode(response, CODE_200);
         ValidatableResponse responseUserDouble = UserMethod.sendPostRequestCreateUser(userDouble);
         CommonMethod.checkResponseCode(responseUserDouble, CODE_403);
-        CommonMethod.checkResponseBody(responseUserDouble, userBodyFieldSuccessDouble, userBodyValueSuccessDouble);
-        CommonMethod.checkResponseBody(responseUserDouble, userBodyFieldMessageDouble, userBodyValueMessageDouble);
+        CommonMethod.checkResponseBody(responseUserDouble, FIELD_SUCCESS, false);
+        CommonMethod.checkResponseBody(responseUserDouble, FIELD_MESSAGE, VALUE_USER_ALREADY_EXISTS);
     }
 
     @Test
     @DisplayName("Check create user without field 'name'")
     public void checkCreateUserWithoutNameField() {
-        ValidatableResponse response = UserMethod.sendPostRequestCreateUser(userJsonWithoutLoginField);
+        User userWithoutName = new User(userWithoutNameEmail, USER_PASSWORD, null);
+        ValidatableResponse response = UserMethod.sendPostRequestCreateUser(userWithoutName);
         CommonMethod.checkResponseCode(response, CODE_403);
-        CommonMethod.checkResponseBody(response, userBodyFieldMessageWithoutLoginField, userBodyValueMessageWithoutLoginField);
+        CommonMethod.checkResponseBody(response, FIELD_MESSAGE, VALUE_EMAIL_PASSWORD_NAME_ARE_REQUIRED_FIELDS);
     }
 
 }

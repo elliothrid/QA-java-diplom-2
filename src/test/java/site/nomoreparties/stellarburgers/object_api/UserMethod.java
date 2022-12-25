@@ -27,22 +27,16 @@ public class UserMethod {
                 .when().post(USER_API_CREATE).then();
     }
 
-    @Step("Send POST create user")
-    public static ValidatableResponse sendPostRequestCreateUser(String json) {
-        return RestAssured.with().filters(requestFilter, responseFiler).header(CONTENT_TYPE, APPLICATION_JSON).
-                and().body(json).when().post(USER_API_CREATE).then();
-    }
-
     @Step("Send POST login user")
-    public static ValidatableResponse sendPostRequestLoginUser(String json) {
+    public static ValidatableResponse sendPostRequestLoginUser(User user) {
         return RestAssured.with().filters(requestFilter, responseFiler).header(CONTENT_TYPE, APPLICATION_JSON).and()
-                .body(json).when().post(USER_API_LOGIN).then();
+                .body(user).when().post(USER_API_LOGIN).then();
     }
 
     @Step("Send PATCH change user")
-    public static ValidatableResponse sendPatchRequestChangeUser(String json, String accessToken) {
+    public static ValidatableResponse sendPatchRequestChangeUser(User user, String accessToken) {
         return RestAssured.with().filters(requestFilter, responseFiler).header(CONTENT_TYPE, APPLICATION_JSON).and()
-                .header(AUTORIZATION, accessToken).body(json).when().patch(USER_API_CHANGE).then();
+                .header(AUTORIZATION, accessToken).body(user).when().patch(USER_API_CHANGE).then();
     }
 
     @Step("Send DELETE exist user")
@@ -57,8 +51,8 @@ public class UserMethod {
     }
 
     @Step("Reset (delete) exist user")
-    public static void resetUser(String json) {
-        ValidatableResponse response = sendPostRequestLoginUser(json);
+    public static void resetUser(User user) {
+        ValidatableResponse response = sendPostRequestLoginUser(user);
         if (response.extract().statusCode() == CODE_200) {
             String accessToken = getAccessToken(response);
             sendDeleteExistUser(accessToken);

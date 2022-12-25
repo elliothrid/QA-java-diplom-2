@@ -9,48 +9,30 @@ import site.nomoreparties.stellarburgers.User;
 import site.nomoreparties.stellarburgers.object_api.CommonMethod;
 import site.nomoreparties.stellarburgers.object_api.UserMethod;
 
+import static site.nomoreparties.stellarburgers.constant.AccessToken.*;
+import static site.nomoreparties.stellarburgers.constant.BodyFieldValue.*;
 import static site.nomoreparties.stellarburgers.constant.ServiceName.*;
 import static site.nomoreparties.stellarburgers.constant.StatusCode.*;
+import static site.nomoreparties.stellarburgers.constant.User.*;
 
 public class UserChangeTest {
 
     static User user;
-
-    //User authorized
     private static final String userEmail  = "masha7898752367@stellarburger.site";
-    private static final String userPassword = "password";
     private static final String userName = "masha";
-    private static final String userJson  = "{\"email\": \"masha7898752367@stellarburger.site\", \"password\": \"password\"}";
-    private static final String userFieldSuccess = "success";
-    private static final Boolean userValueTrue = true;
-
-    //User unauthorized
-    private static final String unauthorizedUserFieldSuccess = "success";
-    private static final Boolean unauthorizedUserValueFalse = false;
-    private static final String unauthorizedUserBodyFieldMessage = "message";
-    private static final String unauthorizedUserBodyValueMessage = "You should be authorised";
-    private static final String unauthorizedUserEmptyToken = "";
-
-    //User to change - field "email"
-    private static final String userToChangeEmailJson  = "{\"email\": \"maria7898752367@stellarburger.site\", \"password\": \"password\"}";
-    private static final String userToChangeEmailNewEmailJson  = "{\"email\": \"maria7898752367@stellarburger.site\", \"password\": \"password\", \"name\": \"masha\"}";
-    private static final String userToChangeEmailNewEmail  = "maria7898752367@stellarburger.site";
-
-    //User to change - field "password"
-    private static final String userToChangePasswordJson  = "{\"email\": \"masha7898752367@stellarburger.site\", \"password\": \"new_password\"}";
-    private static final String userToChangePasswordNewPasswordJson = "{\"email\": \"masha7898752367@stellarburger.site\", \"password\": \"new_password\", \"name\": \"masha\"}";
-
-    //User to change - field "name"
-    private static final String userToChangeNewNameJson = "{\"email\": \"masha7898752367@stellarburger.site\", \"password\": \"password\", \"name\": \"olga\"}";
-    private static final String userToChangeNewName  = "olga";
+    private static final String userNewEmail = "maria7898752367@stellarburger.site";
+    private static final String userNewName  = "maria";
 
     @BeforeClass
     public static void suiteSetup() {
         RestAssured.baseURI = BASE_URI;
-        UserMethod.resetUser(userJson);
-        UserMethod.resetUser(userToChangeEmailJson);
-        UserMethod.resetUser(userToChangePasswordJson);
-        user = new User(userEmail, userPassword, userName);
+        User resetUser = new User(userEmail, USER_PASSWORD, null);
+        UserMethod.resetUser(resetUser);
+        User resetUserWithNewPassword = new User(userNewEmail, USER_PASSWORD, null);
+        UserMethod.resetUser(resetUserWithNewPassword);
+        User resetUserWithNewName = new User(userEmail, USER_NEW_PASSWORD, null);
+        UserMethod.resetUser(resetUserWithNewName);
+        user = new User(userEmail, USER_PASSWORD, userName);
         ValidatableResponse createdUserResponse = UserMethod.sendPostRequestCreateUser(user);
         String token = UserMethod.getAccessToken(createdUserResponse);
         user.setAccessToken(token);
@@ -59,54 +41,60 @@ public class UserChangeTest {
     @Test
     @DisplayName("Check changing login on authorized user")
     public void checkAuthorizedUserChangeFieldLogin() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeEmailNewEmailJson, user.getAccessToken());
+        User userToChangeWithNewEmail = new User(userNewEmail, USER_PASSWORD, userName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeWithNewEmail, user.getAccessToken());
         CommonMethod.checkResponseCode(response, CODE_200);
-        CommonMethod.checkResponseBody(response, userFieldSuccess, userValueTrue);
-        CommonMethod.checkResponseBody(response, "user.email", userToChangeEmailNewEmail);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, true);
+        CommonMethod.checkResponseBody(response, "user.email", userNewEmail);
     }
 
     @Test
     @DisplayName("Check changing password on authorized user")
     public void checkAuthorizedUserChangeFieldPassword() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangePasswordNewPasswordJson, user.getAccessToken());
+        User userToChangeWithNewEmail = new User(userEmail, USER_NEW_PASSWORD, userName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeWithNewEmail, user.getAccessToken());
         CommonMethod.checkResponseCode(response, CODE_200);
-        CommonMethod.checkResponseBody(response, userFieldSuccess, userValueTrue);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, true);
     }
 
     @Test
     @DisplayName("Check changing name on authorized user")
     public void checkAuthorizedUserChangeFieldName() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeNewNameJson, user.getAccessToken());
+        User userToChangeWithNewEmail = new User(userEmail, USER_PASSWORD, userNewName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeWithNewEmail, user.getAccessToken());
         CommonMethod.checkResponseCode(response, CODE_200);
-        CommonMethod.checkResponseBody(response, userFieldSuccess, userValueTrue);
-        CommonMethod.checkResponseBody(response, "user.name", userToChangeNewName);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, true);
+        CommonMethod.checkResponseBody(response, "user.name", userNewName);
     }
 
     @Test
     @DisplayName("Check changing login on unauthorized user")
     public void checkUnauthorizedUserChangeFieldLogin() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeEmailNewEmailJson, unauthorizedUserEmptyToken);
+        User userWithNewEmail = new User(userNewEmail, USER_PASSWORD, userName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userWithNewEmail, EMPTY_ACCESS_TOKEN);
         CommonMethod.checkResponseCode(response, CODE_401);
-        CommonMethod.checkResponseBody(response, unauthorizedUserFieldSuccess, unauthorizedUserValueFalse);
-        CommonMethod.checkResponseBody(response, unauthorizedUserBodyFieldMessage, unauthorizedUserBodyValueMessage);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, false);
+        CommonMethod.checkResponseBody(response, FIELD_MESSAGE, VALUE_YOU_SHOULD_BE_AUTHORISED);
     }
 
     @Test
     @DisplayName("Check changing password on unauthorized user")
     public void checkUnauthorizedUserChangeFieldPassword() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeEmailNewEmailJson, unauthorizedUserEmptyToken);
+        User userWithNewEmail = new User(userNewEmail, USER_PASSWORD, userName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userWithNewEmail, EMPTY_ACCESS_TOKEN);
         CommonMethod.checkResponseCode(response, CODE_401);
-        CommonMethod.checkResponseBody(response, unauthorizedUserFieldSuccess, unauthorizedUserValueFalse);
-        CommonMethod.checkResponseBody(response, unauthorizedUserBodyFieldMessage, unauthorizedUserBodyValueMessage);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, false);
+        CommonMethod.checkResponseBody(response, FIELD_MESSAGE, VALUE_YOU_SHOULD_BE_AUTHORISED);
     }
 
     @Test
     @DisplayName("Check changing name on unauthorized user")
     public void checkUnauthorizedUserChangeFieldName() {
-        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userToChangeEmailNewEmailJson, unauthorizedUserEmptyToken);
+        User userWithNewEmail = new User(userNewEmail, USER_PASSWORD, userName);
+        ValidatableResponse response = UserMethod.sendPatchRequestChangeUser(userWithNewEmail, EMPTY_ACCESS_TOKEN);
         CommonMethod.checkResponseCode(response, CODE_401);
-        CommonMethod.checkResponseBody(response, unauthorizedUserFieldSuccess, unauthorizedUserValueFalse);
-        CommonMethod.checkResponseBody(response, unauthorizedUserBodyFieldMessage, unauthorizedUserBodyValueMessage);
+        CommonMethod.checkResponseBody(response, FIELD_SUCCESS, false);
+        CommonMethod.checkResponseBody(response, FIELD_MESSAGE, VALUE_YOU_SHOULD_BE_AUTHORISED);
     }
 
 }
